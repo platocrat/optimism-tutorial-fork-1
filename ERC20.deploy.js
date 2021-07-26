@@ -10,7 +10,9 @@ const func = async (hre) => {
   await deploy('ERC20', {
     from: deployer,
     args: [ initialSupply, name ],
-    log: true
+    log: true,
+    gasLimit: 31700000,
+    gasPrice: 0
   })
 }
 

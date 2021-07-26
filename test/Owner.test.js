@@ -3,29 +3,53 @@ const { ethers, network } = require('hardhat')
 const chai = require('chai')
 const { solidity } = require('ethereum-waffle')
 const { expect } = chai
+require('dotenv').config()
 
 chai.use(solidity)
+const INITIAL_SUPPLY = 1000000
+const TOKEN_NAME = 'My Optimistic Token'
 
-describe(`ERC20`, () => {
-  const INITIAL_SUPPLY = 1000000
-  const TOKEN_NAME = 'An Optimistic ERC20'
+describe(`Owner`, () => {
+  const provider = new ethers.providers.JsonRpcProvider('https://kovan.optimism.io')
+  const privateKey = process.env.KOVAN_WALLET_PRIVATE_KEY
 
+  const wallet1 = new ethers.Wallet(privateKey, provider)
+  
   let account1
   let account2
+
   before(`load accounts`, async () => {
   })
 
-  console.log('Account 1 ETH balance: ', account1)
-
+  
   let ERC20
-  beforeEach(`deploy ERC20 contract`, async () => {
+  beforeEach(`deploy Owner contract`, async () => {
+    console.log('My Kovan wallet ETH balance: ', (await wallet1.getBalance()).toString())
+
     const Factory__ERC20 = await ethers.getContractFactory('ERC20')
-    ERC20 = await Factory__ERC20.connect(account1).deploy(
+    ERC20 = await Factory__ERC20.connect(wallet1).deploy(
       INITIAL_SUPPLY,
-      TOKEN_NAME
+      TOKEN_NAME, 
+      { 
+        gasLimit: 31700000,
+        gasPrice: 15000000
+       }
     )
 
     await ERC20.deployTransaction.wait()
+    
+    const Factory__Owner = await ethers.getContractFactory('Owner')
+    Owner = await Factory__Owner.connect(wallet1).deploy(
+      { 
+        gasLimit: 31700000,
+        gasPrice: 15000000
+       }
+    )
+
+    await Owner.deployTransaction.wait()
+
+    console.log('ERC20 contract address: ', ERC20.address)
+    console.log('Owner contract address: ', Owner.address)
   })
 
   it(`should have a name`, async () => {
